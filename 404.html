@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>404 / kahay.</title>
+<meta name="theme-color" content="#0a0a0a" />
+<meta name="color-scheme" content="dark" />
+<meta name="robots" content="noindex" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23000'/><text x='50' y='68' font-size='56' text-anchor='middle' fill='%23fff' font-family='monospace' font-weight='700'>k.</text></svg>" />
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --fg: #f2f2f2;
+    --muted: #6e6e6e;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --ease: cubic-bezier(.16, 1, .3, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--fg); color: var(--bg); }
+  a { color: inherit; text-decoration: none; }
+
+  .cursor {
+    position: fixed; top: 0; left: 0; width: 10px; height: 10px; border-radius: 50%;
+    background: #fff; mix-blend-mode: difference; pointer-events: none; z-index: 999;
+    transition: width .35s var(--ease), height .35s var(--ease), opacity .3s;
+  }
+  .cursor.hover { width: 44px; height: 44px; }
+  .cursor.gone { opacity: 0; }
+  @media (hover: none) { .cursor { display: none; } }
+  @media (hover: hover) and (pointer: fine) { *, *::before, *::after { cursor: none !important; } }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 3;
+    padding: 26px 6vw; font-family: var(--mono); font-size: 13px;
+  }
+
+  .stage {
+    position: fixed; inset: 0; z-index: 1;
+    display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 40px;
+    padding: 100px 6vw 60px;
+  }
+  .info { position: relative; z-index: 2; }
+  .info h1 {
+    font-size: clamp(72px, 12vw, 180px); font-weight: 800; letter-spacing: -0.065em; line-height: .88;
+    display: flex; overflow: hidden; padding-bottom: .06em;
+  }
+  .info h1 span { display: inline-block; transform: translateY(110%); animation: up 1.1s var(--ease) forwards; }
+  @keyframes up { to { transform: none; } }
+  .info p { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 22px; opacity: 0; animation: fade 1s ease .6s forwards; }
+  .back {
+    display: inline-flex; gap: .5em; margin-top: 26px;
+    font-family: var(--mono); font-size: 14px; opacity: 0; animation: fade 1s ease .8s forwards;
+  }
+  .back span { transition: transform .5s var(--ease); }
+  .back:hover span { transform: translateX(8px); }
+  @keyframes fade { to { opacity: 1; } }
+
+  .ascii {
+    justify-self: center; font-family: var(--mono); line-height: 1; white-space: pre;
+    user-select: none; color: var(--fg);
+    opacity: 0; animation: fade 1.6s ease .4s forwards;
+  }
+
+  canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+
+  @media (max-width: 900px) {
+    .stage { grid-template-columns: 1fr; align-content: center; padding-top: 90px; }
+    .ascii { order: -1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor"></div>
+
+<nav><a href="/">kahay.</a></nav>
+
+<main class="stage" id="stage">
+  <div class="info">
+    <h1><span>4</span><span style="animation-delay:.07s">0</span><span style="animation-delay:.14s">4</span></h1>
+    <p>this page doesn't exist.</p>
+    <a class="back" href="/">back <span>-&gt;</span></a>
+  </div>
+  <pre class="ascii" id="ascii" aria-hidden="true"></pre>
+</main>
+
+<canvas id="c"></canvas>
+
+<script>
+const pre = document.getElementById('ascii');
+const W = 64, H = 32, ASPECT = 1.66;
+const RAMP = ' .,:-=+*#%@';
+const NU = 260, NV = 130, COUNT = NU * NV;
+const K2 = 4.6, K1 = 0.6 * H * (K2 - 1.45) / 1.45;
+const Lx = -0.33, Ly = 0.42, Lz = -0.84;
+
+const P = new Float32Array(COUNT * 3), N = new Float32Array(COUNT * 3), T = new Float32Array(COUNT);
+for (let i = 0, k = 0; i < NU; i++) {
+  const u = (i / NU) * Math.PI * 2;
+  for (let j = 0; j < NV; j++, k += 3) {
+    const lat = ((j + 0.5) / NV - 0.5) * Math.PI;
+    const x = Math.cos(lat) * Math.cos(u), y = Math.sin(lat), z = Math.cos(lat) * Math.sin(u);
+    const ax = Math.abs(x), ay = Math.abs(y), az = Math.abs(z), m = Math.max(ax, ay, az), s = 0.85 / m;
+    P[k] = x * s; P[k+1] = y * s; P[k+2] = z * s;
+    const [a, b] = ax === m ? [y, z] : ay === m ? [x, z] : [x, y];
+    const pa = Math.min(7, ((a * s / 0.85 + 1) * 4) | 0), pb = Math.min(7, ((b * s / 0.85 + 1) * 4) | 0);
+    const h = Math.sin(pa * 12.9898 + pb * 78.233 + (ax === m ? 1 : ay === m ? 2 : 3) * 37.719) * 43758.5453;
+    T[k / 3] = 0.62 + (h - Math.floor(h)) * 0.42;
+    N[k] = ax === m ? Math.sign(x) : 0; N[k+1] = ay === m ? Math.sign(y) : 0; N[k+2] = az === m ? Math.sign(z) : 0;
+  }
+}
+
+const ROW = W + 1, zbuf = new Float32Array(W * H), out = new Array(ROW * H).fill(' ');
+let rx = -0.5, ry = 0.6;
+
+function renderCube() {
+  const cA = Math.cos(rx), sA = Math.sin(rx), cB = Math.cos(ry), sB = Math.sin(ry);
+  const last = RAMP.length - 1;
+  zbuf.fill(0);
+  for (let y = 0; y < H; y++) { out.fill(' ', y * ROW, y * ROW + W); out[y * ROW + W] = '\n'; }
+  for (let k = 0; k < COUNT * 3; k += 3) {
+    const px = P[k], py = P[k+1], pz = P[k+2];
+    const x1 = px * cB + pz * sB, z1 = -px * sB + pz * cB;
+    const y2 = py * cA - z1 * sA, z2 = py * sA + z1 * cA;
+    const ooz = 1 / (z2 + K2);
+    const xp = (W / 2 + K1 * ooz * x1 * ASPECT) | 0, yp = (H / 2 - K1 * ooz * y2) | 0;
+    if (xp < 0 || xp >= W || yp < 0 || yp >= H) continue;
+    const idx = yp * W + xp;
+    if (ooz > zbuf[idx]) {
+      zbuf[idx] = ooz;
+      const nx = N[k], ny = N[k+1], nz = N[k+2];
+      const nx1 = nx * cB + nz * sB, nz1 = -nx * sB + nz * cB;
+      const ny2 = ny * cA - nz1 * sA, nz2 = ny * sA + nz1 * cA;
+      let lum = nx1 * Lx + ny2 * Ly + nz2 * Lz;
+      lum = (lum > 0 ? 0.12 + lum * 0.88 : 0.12) * T[k / 3];
+      out[yp * ROW + xp] = RAMP[Math.min(last, Math.max(1, Math.round(lum * last)))];
+    }
+  }
+  pre.textContent = out.join('');
+}
+
+const stage = document.getElementById('stage');
+function fit() {
+  const cs = getComputedStyle(stage);
+  const avail = stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const w = Math.min(innerWidth > 900 ? (avail - 40) / 2 : avail, 680);
+  pre.style.fontSize = (w / (W * 0.6)).toFixed(2) + 'px';
+}
+
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+let dpr = 1, vw = 0, vh = 0;
+function resize() {
+  fit();
+  dpr = Math.min(devicePixelRatio || 1, 1.5);
+  vw = innerWidth; vh = innerHeight;
+  cv.width = vw * dpr; cv.height = vh * dpr;
+  cv.style.width = vw + 'px'; cv.style.height = vh + 'px';
+}
+addEventListener('resize', resize); resize();
+
+let glyphs = {}, cw = 7, ch = 12;
+function buildGlyphs() {
+  const r = pre.getBoundingClientRect();
+  cw = r.width / W; ch = parseFloat(pre.style.fontSize);
+  const font = `${ch * dpr}px ${getComputedStyle(pre).fontFamily}`;
+  const gw = Math.ceil(cw * dpr) + 2, gh = Math.ceil(ch * dpr) + 2;
+  glyphs = {};
+  for (const c of RAMP.slice(1)) {
+    const g = document.createElement('canvas'); g.width = gw; g.height = gh;
+    const x = g.getContext('2d');
+    x.font = font; x.textBaseline = 'middle'; x.fillStyle = '#f2f2f2';
+    x.fillText(c, 1, gh / 2);
+    glyphs[c] = g;
+  }
+  return r;
+}
+
+let parts = [], phase = 'spin', phaseStart = performance.now();
+let mx = -9999, my = -9999;
+addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; });
+addEventListener('pointerdown', e => { mx = e.clientX; my = e.clientY; });
+addEventListener('pointerup', e => { if (e.pointerType !== 'mouse') { mx = -9999; my = -9999; } });
+
+function shatter() {
+  const r = buildGlyphs();
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  parts = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const c = out[y * ROW + x];
+    if (c === ' ') continue;
+    const hx = r.left + x * cw, hy = r.top + y * ch;
+    parts.push({ c, hx, hy, x: hx, y: hy, sx: 0, sy: 0, sr: 0,
+      vx: (hx - cx) * 0.02 + (Math.random() - 0.5) * 3, vy: (hy - cy) * 0.01 - Math.random() * 4,
+      r: 0, vr: (Math.random() - 0.5) * 0.3 });
+  }
+  pre.style.visibility = 'hidden';
+}
+
+function step(floor) {
+  for (const p of parts) {
+    p.vy += 0.35;
+    const dx = p.x - mx, dy = p.y - my, d2 = dx * dx + dy * dy;
+    if (d2 < 6400) { const f = (6400 - d2) / 6400 * 1.6, d = Math.sqrt(d2) || 1; p.vx += dx / d * f; p.vy += dy / d * f; p.vr += (Math.random() - 0.5) * 0.05; }
+    p.x += p.vx; p.y += p.vy; p.r += p.vr;
+    if (p.y > floor) { p.y = floor; p.vy *= -0.35; p.vx *= 0.8; p.vr *= 0.6; p.r *= 0.9; if (Math.abs(p.vy) < 0.6) p.vy = 0; }
+    if (p.x < 0) { p.x = 0; p.vx *= -0.5; }
+    if (p.x > vw - cw) { p.x = vw - cw; p.vx *= -0.5; }
+  }
+}
+
+function put(g, x, y, r) {
+  const gw = cw + 2 / dpr, gh = ch + 2 / dpr;
+  if (r > 0.02 || r < -0.02) {
+    const c = Math.cos(r) * dpr, s = Math.sin(r) * dpr;
+    ctx.setTransform(c, s, -s, c, (x + cw / 2) * dpr, (y + ch / 2) * dpr);
+    ctx.drawImage(g, -cw / 2, -ch / 2, gw, gh);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  } else ctx.drawImage(g, x, y, gw, gh);
+}
+
+let lastNow = 0, acc = 0;
+function draw(now) {
+  requestAnimationFrame(draw);
+  const dt = Math.min(now - (lastNow || now), 100); lastNow = now;
+  const t = now - phaseStart;
+
+  if (phase === 'spin') {
+    rx += 0.004 * dt / 16.7; ry += 0.011 * dt / 16.7;
+    renderCube();
+    if (t > 2400) { shatter(); phase = 'fall'; phaseStart = now; acc = 0; }
+    return;
+  }
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, vw, vh);
+
+  if (phase === 'fall') {
+    acc += dt;
+    while (acc >= 16.7) { acc -= 16.7; step(vh - ch - 4); }
+    for (const p of parts) put(glyphs[p.c], p.x, p.y, p.r);
+    if (t > 4200) { for (const p of parts) { p.sx = p.x; p.sy = p.y; p.sr = p.r; } phase = 'back'; phaseStart = now; }
+    return;
+  }
+
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i];
+    const k = Math.min(1, Math.max(0, (t - (i % 40) * 6) / 1100));
+    const e = 1 - Math.pow(1 - k, 4);
+    put(glyphs[p.c], p.sx + (p.hx - p.sx) * e, p.sy + (p.hy - p.sy) * e, p.sr * (1 - e));
+  }
+  if (t > 1500) {
+    ctx.clearRect(0, 0, vw, vh);
+    pre.style.visibility = '';
+    phase = 'spin'; phaseStart = now;
+  }
+}
+renderCube();
+requestAnimationFrame(draw);
+
+const cursor = document.querySelector('.cursor');
+let cx = -100, cy = -100;
+addEventListener('mousemove', () => cursor.classList.remove('gone'));
+document.addEventListener('mouseleave', () => cursor.classList.add('gone'));
+(function loop() {
+  cx += (mx - cx) * 0.18; cy += (my - cy) * 0.18;
+  const s = cursor.offsetWidth / 2;
+  cursor.style.transform = `translate(${cx - s}px, ${cy - s}px)`;
+  requestAnimationFrame(loop);
+})();
+document.querySelectorAll('a').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+});
+</script>
+</body>
+</html>

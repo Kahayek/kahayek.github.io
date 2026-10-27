@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>kahay.</title>
+<meta name="description" content="kahay - web & minecraft mod developer." />
+<meta name="theme-color" content="#0a0a0a" />
+<meta name="color-scheme" content="dark" />
+<meta property="og:title" content="kahay." />
+<meta property="og:description" content="web & minecraft mod developer." />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23000'/><text x='50' y='68' font-size='56' text-anchor='middle' fill='%23fff' font-family='monospace' font-weight='700'>k.</text></svg>" />
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --fg: #f2f2f2;
+    --muted: #6e6e6e;
+    --line: #1c1c1c;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --ease: cubic-bezier(.16, 1, .3, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { overflow-x: clip; }
+  html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+  @media (pointer: coarse) { html { scroll-behavior: smooth; } }
+  body {
+    background: var(--bg); color: var(--fg); font-family: var(--sans);
+    line-height: 1.5; overflow-x: hidden; -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--fg); color: var(--bg); }
+  a { color: inherit; text-decoration: none; }
+
+  .cursor {
+    position: fixed; top: 0; left: 0; width: 10px; height: 10px; border-radius: 50%;
+    background: #fff; mix-blend-mode: difference; pointer-events: none; z-index: 999;
+    transition: width .35s var(--ease), height .35s var(--ease), opacity .3s;
+  }
+  .cursor.hover { width: 44px; height: 44px; }
+  @media (hover: none) { .cursor { display: none; } }
+  @media (hover: hover) and (pointer: fine) { *, *::before, *::after { cursor: none !important; } }
+  .cursor.gone { opacity: 0; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 26px 6vw; font-family: var(--mono); font-size: 13px;
+    border-bottom: 1px solid transparent;
+    transition: transform .6s var(--ease), background .4s, border-color .4s, padding .4s var(--ease);
+  }
+  nav.solid {
+    background: rgba(10,10,10,.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-color: var(--line); padding: 16px 6vw;
+  }
+  nav.hide { transform: translateY(-100%); }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a { color: var(--muted); transition: color .3s; }
+  .nav-links a:hover { color: var(--fg); }
+
+  .hero {
+    min-height: 100vh; min-height: 100svh; padding: 100px 6vw 60px;
+    display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 40px;
+  }
+  .hero h1 {
+    font-size: clamp(72px, 12vw, 180px); font-weight: 800; line-height: .88; letter-spacing: -0.065em;
+    display: flex; overflow: hidden; padding-bottom: .06em;
+  }
+  .hero h1 span { display: inline-block; transform: translateY(110%); animation: up 1.1s var(--ease) forwards; }
+  .hero h1 .dot { color: var(--muted); }
+  @keyframes up { to { transform: none; } }
+  .role {
+    margin-top: 22px; font-family: var(--mono); font-size: 13px; color: var(--muted);
+    opacity: 0; animation: fade 1s ease .8s forwards;
+  }
+  @keyframes fade { to { opacity: 1; } }
+
+  .ascii {
+    justify-self: center; font-family: var(--mono); line-height: 1; white-space: pre;
+    user-select: none; cursor: grab; touch-action: pan-y;
+    opacity: 0; animation: fade 1.6s ease .4s forwards;
+  }
+  .ascii:active { cursor: grabbing; }
+
+  section { padding: 100px 6vw; }
+  .label { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 1s var(--ease), transform 1s var(--ease); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  .projects { list-style: none; border-top: 1px solid var(--line); }
+  .project {
+    display: flex; justify-content: space-between; align-items: center; gap: 20px;
+    padding: 28px 0; border-bottom: 1px solid var(--line); cursor: pointer;
+    position: relative; isolation: isolate;
+  }
+  .project::before {
+    content: ""; position: absolute; inset: 0 -6vw; background: var(--fg); z-index: -1;
+    transform: scaleY(0); transform-origin: bottom; transition: transform .6s var(--ease);
+  }
+  @media (hover: hover) {
+  .project:hover::before { transform: scaleY(1); }
+  .project > * { transition: color .4s var(--ease), transform .6s var(--ease); }
+  .project:hover > * { color: var(--bg); }
+  .p-title { font-size: clamp(26px, 3.6vw, 46px); font-weight: 700; letter-spacing: -0.045em; }
+  .project:hover .p-title { transform: translateX(10px); }
+  }
+  .p-tags { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  .discord {
+    display: inline-block; background: none; border: none; color: var(--fg); cursor: pointer;
+    font-family: var(--sans); font-size: clamp(56px, 11vw, 160px); font-weight: 800;
+    letter-spacing: -0.065em; line-height: 1; text-align: left;
+  }
+  .discord .dot { color: var(--muted); }
+  .hint { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 16px; height: 1.5em; }
+
+  .gh-label { margin-top: 90px; }
+  .aside { color: #3d3d3d; }
+  .gh {
+    display: inline-flex; align-items: baseline; gap: .3em;
+    font-size: clamp(40px, 6.5vw, 96px); font-weight: 800; letter-spacing: -0.06em; line-height: 1;
+  }
+  .gh .arrow {
+    font-family: var(--mono); font-size: .4em; font-weight: 400; letter-spacing: 0; color: var(--muted);
+    transition: transform .5s var(--ease), color .3s;
+  }
+  @media (hover: hover) { .gh:hover .arrow { transform: translateX(10px); color: var(--fg); } }
+
+  .peek, .ghost {
+    position: fixed; right: 0; bottom: 0; height: clamp(200px, 38vh, 400px);
+    transform: translateX(105%); user-select: none; -webkit-user-drag: none; pointer-events: none;
+  }
+  .peek { z-index: 40; pointer-events: auto; will-change: transform; }
+  .ghost { z-index: 39; opacity: 0; mix-blend-mode: screen; }
+  .peek.glitch { animation: glitch .42s steps(1) both; }
+  @keyframes glitch {
+    0%   { clip-path: inset(0 0 58% 0); translate: -14px 0; filter: drop-shadow(7px 0 0 #ff2bd6) drop-shadow(-7px 0 0 #00e5ff); }
+    14%  { clip-path: inset(42% 0 18% 0); translate: 10px 0; }
+    28%  { clip-path: inset(72% 0 0 0); translate: -6px 0; filter: drop-shadow(-5px 0 0 #c6ff00) drop-shadow(5px 0 0 #ff2bd6); }
+    42%  { clip-path: inset(12% 0 46% 0); translate: 5px 0; }
+    56%  { clip-path: inset(0); translate: -3px 0; filter: drop-shadow(3px 0 0 #ff2bd6) drop-shadow(-3px 0 0 #00e5ff); }
+    76%  { translate: 1px 0; filter: drop-shadow(1px 0 0 #ff2bd6) drop-shadow(-1px 0 0 #00e5ff); }
+    100% { clip-path: none; translate: 0 0; filter: none; }
+  }
+  .flash {
+    position: fixed; inset: 0; z-index: 38; pointer-events: none; opacity: 0;
+    background: radial-gradient(circle at 100% 85%, rgba(198,255,0,.16), rgba(0,229,255,.05) 40%, transparent 70%);
+  }
+
+  .quote {
+    padding: 40px 6vw 34px; text-align: center;
+    font-family: var(--mono); font-size: 12px; color: #3a3a3a; transition: color .6s;
+  }
+  .quote:hover { color: var(--muted); }
+
+  footer {
+    border-top: 1px solid var(--line); padding: 28px 6vw; display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+  }
+  footer a:hover { color: var(--fg); }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; padding-top: 120px; }
+    .p-tags { font-size: 11px; white-space: nowrap; }
+    section { padding: 80px 6vw; }
+    .gh-label { margin-top: 70px; }
+  }
+  @media (max-width: 420px) {
+    nav { padding: 20px 6vw; }
+    .nav-links { gap: 18px; }
+    .aside { display: block; margin-top: 2px; }
+    footer { font-size: 11px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+<noscript><style>.reveal { opacity: 1; transform: none; } .role { opacity: 1; animation: none; }</style></noscript>
+</head>
+<body>
+
+<div class="cursor"></div>
+<div class="flash" id="flash"></div>
+<img class="peek" id="peek" src="girl.png" alt="" aria-hidden="true" draggable="false" decoding="async" />
+
+<nav>
+  <a href="#top">kahay.</a>
+  <div class="nav-links">
+    <a href="#work">work</a>
+    <a href="#contact">contact</a>
+    <a href="https://github.com/Kahayek" target="_blank" rel="noopener">github</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div>
+    <h1 id="title" aria-label="kahay.">kahay.</h1>
+    <p class="role">web &amp; minecraft mod developer</p>
+  </div>
+  <pre class="ascii" id="ascii" aria-hidden="true"></pre>
+</header>
+
+<section id="work">
+  <p class="label reveal">work</p>
+  <ul class="projects">
+    <li class="project reveal" data-href="#top"><span class="p-title scr">Portfolio</span><span class="p-tags">you're here</span></li>
+    <li class="project reveal"><span class="p-title scr">Screenshot App</span><span class="p-tags">in progress</span></li>
+    <li class="project reveal"><span class="p-title scr">Something bigger</span><span class="p-tags">planning</span></li>
+  </ul>
+</section>
+
+<section id="contact">
+  <p class="label reveal">discord</p>
+  <button class="discord reveal" id="copy" aria-label="copy discord username kahay."><span class="scr">kahay</span><span class="dot">.</span></button>
+  <p class="hint" id="hint">click to copy</p>
+
+  <p class="label reveal gh-label">github <span class="aside">/ alt account. the main one stays secret.</span></p>
+  <a class="gh reveal" href="https://github.com/Kahayek" target="_blank" rel="noopener"><span class="scr">Kahayek</span><span class="arrow">-&gt;</span></a>
+</section>
+
+<p class="quote reveal">&ldquo;Sorry, wish we could go to the moon together&rdquo;</p>
+
+<footer>
+  <span>&copy; <span id="year"></span></span>
+  <span><span id="clock">--:--</span> my time</span>
+  <a href="#top">top</a>
+</footer>
+
+<script>
+const title = document.getElementById('title');
+title.textContent = '';
+[...'kahay.'].forEach((c, i) => {
+  const s = document.createElement('span');
+  s.textContent = c;
+  if (c === '.') s.className = 'dot';
+  s.style.animationDelay = (0.1 + i * 0.07) + 's';
+  title.appendChild(s);
+});
+
+const pre = document.getElementById('ascii');
+const W = 64, H = 32, ASPECT = 1.66;
+const RAMP = ' .,:-=+*#%@';
+const NU = 260, NV = 130, COUNT = NU * NV;
+const K2 = 4.6, K1 = 0.6 * H * (K2 - 1.45) / 1.45;
+
+function build(fn) {
+  const P = new Float32Array(COUNT * 3), N = new Float32Array(COUNT * 3), T = new Float32Array(COUNT).fill(1);
+  let k = 0;
+  for (let i = 0; i < NU; i++) {
+    const u = (i / NU) * Math.PI * 2;
+    for (let j = 0; j < NV; j++, k += 3) fn(u, (j + 0.5) / NV, P, N, k, T);
+  }
+  return { P, N, T };
+}
+function sph(u, v) { const lat = (v - 0.5) * Math.PI; return [Math.cos(lat) * Math.cos(u), Math.sin(lat), Math.cos(lat) * Math.sin(u)]; }
+
+const shapes = [
+  build((u, v, P, N, k, T) => {
+    const [x, y, z] = sph(u, v), ax = Math.abs(x), ay = Math.abs(y), az = Math.abs(z);
+    const m = Math.max(ax, ay, az), s = 0.85 / m;
+    P[k] = x * s; P[k+1] = y * s; P[k+2] = z * s;
+    const [a, b] = ax === m ? [y, z] : ay === m ? [x, z] : [x, y];
+    const pa = Math.min(7, ((a * s / 0.85 + 1) * 4) | 0), pb = Math.min(7, ((b * s / 0.85 + 1) * 4) | 0);
+    const h = Math.sin(pa * 12.9898 + pb * 78.233 + (ax === m ? 1 : ay === m ? 2 : 3) * 37.719) * 43758.5453;
+    T[k / 3] = 0.62 + (h - Math.floor(h)) * 0.42;
+    N[k] = ax === m ? Math.sign(x) : 0; N[k+1] = ay === m ? Math.sign(y) : 0; N[k+2] = az === m ? Math.sign(z) : 0;
+  }),
+  build((u, v, P, N, k) => {
+    const p = v * Math.PI * 2, R = 0.98, r = 0.44, cp = Math.cos(p), sp = Math.sin(p);
+    P[k] = (R + r * cp) * Math.cos(u); P[k+1] = r * sp; P[k+2] = (R + r * cp) * Math.sin(u);
+    N[k] = cp * Math.cos(u); N[k+1] = sp; N[k+2] = cp * Math.sin(u);
+  }),
+  build((u, v, P, N, k) => {
+    const [x, y, z] = sph(u, v), r = 1.25;
+    P[k] = x * r; P[k+1] = y * r; P[k+2] = z * r; N[k] = x; N[k+1] = y; N[k+2] = z;
+  }),
+  build((u, v, P, N, k) => {
+    const [x, y, z] = sph(u, v), s = 1.4 / (Math.abs(x) + Math.abs(y) + Math.abs(z)), q = 1 / Math.sqrt(3);
+    P[k] = x * s; P[k+1] = y * s; P[k+2] = z * s;
+    N[k] = Math.sign(x) * q; N[k+1] = Math.sign(y) * q; N[k+2] = Math.sign(z) * q;
+  }),
+];
+
+let cur = 0, from = 0, morphT = 1, morphStart = 0;
+let rx = -0.5, ry = 0.6, vx = 0, vy = 0;
+const Lx = -0.33, Ly = 0.42, Lz = -0.84;
+const ROW = W + 1, zbuf = new Float32Array(W * H), out = new Array(ROW * H).fill(' ');
+let visible = true, dragging = false, spinBoost = 0, lastFrame = 0;
+
+function nextShape() { from = cur; cur = (cur + 1) % shapes.length; morphT = 0; morphStart = performance.now(); }
+
+function render(now) {
+  requestAnimationFrame(render);
+  const dt = Math.min((now - (lastFrame || now - 16.7)) / 16.7, 3); lastFrame = now;
+  if (!visible) return;
+  if (!dragging) { const f = Math.pow(0.95, dt); vx *= f; vy *= f; }
+  rx += (0.004 + vx) * dt; ry += (0.011 + vy + spinBoost) * dt; spinBoost *= Math.pow(0.92, dt);
+
+  if (morphT < 1) morphT = Math.min((now - morphStart) / 900, 1);
+  const e = morphT < 0.5 ? 4 * morphT ** 3 : 1 - (-2 * morphT + 2) ** 3 / 2;
+  const A = shapes[from], B = shapes[cur], ie = 1 - e;
+  const cA = Math.cos(rx), sA = Math.sin(rx), cB = Math.cos(ry), sB = Math.sin(ry);
+  zbuf.fill(0);
+  for (let y = 0; y < H; y++) { out.fill(' ', y * ROW, y * ROW + W); out[y * ROW + W] = '\n'; }
+  const last = RAMP.length - 1;
+
+  for (let k = 0; k < COUNT * 3; k += 3) {
+    let px, py, pz, nx, ny, nz, t;
+    if (e >= 1) { px = B.P[k]; py = B.P[k+1]; pz = B.P[k+2]; nx = B.N[k]; ny = B.N[k+1]; nz = B.N[k+2]; t = B.T[k / 3]; }
+    else {
+      px = A.P[k]*ie + B.P[k]*e; py = A.P[k+1]*ie + B.P[k+1]*e; pz = A.P[k+2]*ie + B.P[k+2]*e;
+      nx = A.N[k]*ie + B.N[k]*e; ny = A.N[k+1]*ie + B.N[k+1]*e; nz = A.N[k+2]*ie + B.N[k+2]*e;
+      t = A.T[k / 3] * ie + B.T[k / 3] * e;
+    }
+    const x1 = px * cB + pz * sB, z1 = -px * sB + pz * cB;
+    const y2 = py * cA - z1 * sA, z2 = py * sA + z1 * cA;
+    const ooz = 1 / (z2 + K2);
+    const xp = (W / 2 + K1 * ooz * x1 * ASPECT) | 0, yp = (H / 2 - K1 * ooz * y2) | 0;
+    if (xp < 0 || xp >= W || yp < 0 || yp >= H) continue;
+    const idx = yp * W + xp;
+    if (ooz > zbuf[idx]) {
+      zbuf[idx] = ooz;
+      const nx1 = nx * cB + nz * sB, nz1 = -nx * sB + nz * cB;
+      const ny2 = ny * cA - nz1 * sA, nz2 = ny * sA + nz1 * cA;
+      let lum = nx1 * Lx + ny2 * Ly + nz2 * Lz;
+      lum = (lum > 0 ? 0.12 + lum * 0.88 : 0.12) * t;
+      out[yp * ROW + xp] = RAMP[Math.min(last, Math.max(1, Math.round(lum * last)))];
+    }
+  }
+  pre.textContent = out.join('');
+}
+
+function fit() {
+  const h = pre.parentElement, cs = getComputedStyle(h);
+  const avail = h.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const w = Math.min(innerWidth > 900 ? (avail - 40) / 2 : avail, 680);
+  pre.style.fontSize = (w / (W * 0.6)).toFixed(2) + 'px';
+}
+addEventListener('resize', fit); fit();
+new IntersectionObserver(([en]) => visible = en.isIntersecting).observe(pre);
+
+let moved = 0, lastX = 0, lastY = 0;
+pre.addEventListener('pointerdown', e => {
+  dragging = true; moved = 0; lastX = e.clientX; lastY = e.clientY;
+  if (e.pointerType === 'mouse') try { pre.setPointerCapture(e.pointerId); } catch {}
+});
+addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  moved += Math.abs(dx) + Math.abs(dy);
+  vy = dx * 0.006; vx = dy * 0.006;
+  lastX = e.clientX; lastY = e.clientY;
+});
+addEventListener('pointerup', () => { if (dragging && moved < 8) nextShape(); dragging = false; });
+addEventListener('pointercancel', () => { dragging = false; });
+requestAnimationFrame(render);
+
+const G = '!<>-_\\/[]{}=+*^?#';
+function scramble(el) {
+  const o = el.dataset.t || (el.dataset.t = el.textContent);
+  let f = 0; clearInterval(el._t);
+  el._t = setInterval(() => {
+    el.textContent = [...o].map((c, i) => (i < f / 2 || c === ' ') ? c : G[Math.random() * G.length | 0]).join('');
+    if (++f / 2 >= o.length) { clearInterval(el._t); el.textContent = o; }
+  }, 28);
+}
+document.querySelectorAll('.scr').forEach(el => (el.closest('.project, .discord, .gh') || el).addEventListener('mouseenter', () => scramble(el)));
+
+const cursor = document.querySelector('.cursor');
+let mx = -100, my = -100, cx = mx, cy = my;
+addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cursor.classList.remove('gone'); });
+document.addEventListener('mouseleave', () => cursor.classList.add('gone'));
+(function loop() {
+  cx += (mx - cx) * 0.18; cy += (my - cy) * 0.18;
+  const s = cursor.offsetWidth / 2;
+  cursor.style.transform = `translate(${cx - s}px, ${cy - s}px)`;
+  requestAnimationFrame(loop);
+})();
+document.querySelectorAll('a, button, .project, .ascii').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+});
+
+const nav = document.querySelector('nav');
+let prevScroll = scrollY;
+addEventListener('scroll', () => {
+  const y = scrollY;
+  nav.classList.toggle('solid', y > 40);
+  nav.classList.toggle('hide', y > prevScroll && y > 120);
+  prevScroll = y;
+}, { passive: true });
+
+const io = new IntersectionObserver(es => es.forEach(en => {
+  if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+}), { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = (i % 4) * 0.06 + 's'; io.observe(el); });
+
+document.querySelectorAll('.project').forEach(p => p.addEventListener('click', () => { const h = p.dataset.href; if (!h) return; h.startsWith('#') ? goTo(h) : open(h, '_blank', 'noopener'); }));
+
+const hint = document.getElementById('hint');
+const hintText = matchMedia('(hover: none)').matches ? 'tap to copy' : 'click to copy';
+hint.textContent = hintText;
+document.getElementById('copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText('kahay.'); }
+  catch {
+    const t = document.createElement('textarea'); t.value = 'kahay.'; t.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch {} t.remove();
+  }
+  hint.textContent = 'copied';
+  clearTimeout(hint._t); hint._t = setTimeout(() => hint.textContent = hintText, 1600);
+});
+
+const peek = document.getElementById('peek'), flash = document.getElementById('flash');
+const NEON = ['#c6ff00', '#00ffa3', '#00e5ff', '#ff2bd6', '#ffe600'];
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ghosts = []; let gi = 0;
+function makeGhosts() {
+  const gw = Math.round(peek.naturalWidth / 2), gh = Math.round(peek.naturalHeight / 2);
+  for (let i = 0; i < 14; i++) {
+    const c = document.createElement('canvas');
+    c.width = gw; c.height = gh; c.className = 'ghost';
+    const g = c.getContext('2d');
+    g.drawImage(peek, 0, 0, gw, gh);
+    g.globalCompositeOperation = 'source-in';
+    g.fillStyle = NEON[i % NEON.length];
+    g.fillRect(0, 0, c.width, c.height);
+    document.body.appendChild(c); ghosts.push(c);
+  }
+}
+let peekOk = !(peek.complete && !peek.naturalWidth);
+peek.addEventListener('error', () => { peekOk = false; peek.remove(); });
+peek.complete && peek.naturalWidth ? makeGhosts() : peek.addEventListener('load', makeGhosts);
+
+function ghostAt(x) {
+  if (calm || !ghosts.length) return;
+  const g = ghosts[gi++ % ghosts.length];
+  g.getAnimations().forEach(a => a.cancel());
+  g.style.transform = `translateX(${x}%)`;
+  g.animate([{ opacity: .6 }, { opacity: 0 }], { duration: 750, easing: 'cubic-bezier(.2,.6,.3,1)', fill: 'forwards' });
+}
+const outExpo = k => k === 1 ? 1 : 1 - Math.pow(2, -10 * k);
+const inExpo = k => k === 0 ? 0 : Math.pow(2, 10 * k - 10);
+let px = 105, dashId = 0, session = 0, busy = false, holds = [];
+function dash(to, dur, ease) {
+  return new Promise(res => {
+    const id = ++dashId, from = px, t0 = performance.now(), dir = Math.sign(to - from);
+    let lastG = from;
+    (function step(now) {
+      if (id !== dashId) return res(false);
+      const k = Math.min(1, (now - t0) / dur);
+      px = from + (to - from) * ease(k);
+      peek.style.transform = `translateX(${px}%)`;
+      while ((px - lastG) * dir >= 8) { lastG += 8 * dir; ghostAt(lastG); }
+      k < 1 ? requestAnimationFrame(step) : res(true);
+    })(t0);
+  });
+}
+const wait = ms => new Promise(r => holds.push(setTimeout(r, ms)));
+function glitch() { peek.classList.remove('glitch'); void peek.offsetWidth; peek.classList.add('glitch'); }
+function flashOnce() { if (!calm) flash.animate([{ opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: 0 }], { duration: 600, easing: 'ease-out' }); }
+
+async function peekOnce() {
+  if (!peekOk || document.hidden || busy) return;
+  const s = ++session; busy = true;
+  flashOnce();
+  await dash(45, 420, outExpo); if (s !== session) return;
+  glitch(); await wait(900); if (s !== session) return;
+  await dash(0, 320, outExpo); if (s !== session) return;
+  glitch(); await wait(1700); if (s !== session) return;
+  await dash(105, 380, inExpo); busy = false;
+}
+async function hide() {
+  if (px >= 105) return;
+  session++; holds.forEach(clearTimeout); holds = [];
+  glitch(); flashOnce();
+  await dash(105, 300, inExpo); busy = false;
+}
+peek.addEventListener('mouseenter', hide);
+peek.addEventListener('pointerdown', hide);
+(function schedule(first) {
+  setTimeout(() => { peekOnce(); schedule(false); }, first ? 3500 : 20000 + Math.random() * 20000);
+})(true);
+
+document.getElementById('year').textContent = new Date().getFullYear();
+
+addEventListener('visibilitychange', () => { document.title = document.hidden ? 'come back.' : 'kahay.'; });
+
+const clock = document.getElementById('clock');
+const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Warsaw', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+const tick = () => { const [h, m] = fmt.format(new Date()).split(':'); clock.innerHTML = `${h}<span style="opacity:${new Date().getSeconds() % 2 ? .3 : 1}">:</span>${m}`; };
+tick(); setInterval(tick, 1000);
+
+const smooth = matchMedia('(pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+let target = scrollY, current = scrollY, gliding = false;
+const maxY = () => document.documentElement.scrollHeight - innerHeight;
+function glide() {
+  current += (target - current) * 0.09;
+  if (Math.abs(target - current) < 0.5) { current = target; gliding = false; }
+  scrollTo(0, current);
+  if (gliding) requestAnimationFrame(glide);
+}
+function scrollToY(y) {
+  target = Math.max(0, Math.min(maxY(), y));
+  if (!gliding) { current = scrollY; gliding = true; requestAnimationFrame(glide); }
+}
+if (smooth) {
+  addEventListener('wheel', e => {
+    if (e.ctrlKey) return;
+    e.preventDefault();
+    if (!gliding) target = scrollY;
+    scrollToY(target + e.deltaY * (e.deltaMode === 1 ? 32 : 1));
+  }, { passive: false });
+}
+addEventListener('scroll', () => { if (!gliding) target = current = scrollY; }, { passive: true });
+function goTo(hash) {
+  const el = hash === '#top' ? null : document.querySelector(hash);
+  const y = el ? el.getBoundingClientRect().top + scrollY : 0;
+  smooth ? scrollToY(y) : scrollTo({ top: y, behavior: 'smooth' });
+}
+document.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); goTo(a.getAttribute('href')); }));
+
+let cubeScroll = scrollY;
+addEventListener('scroll', () => {
+  const d = scrollY - cubeScroll; cubeScroll = scrollY;
+  spinBoost = Math.max(-0.25, Math.min(0.25, spinBoost + d * 0.0012));
+}, { passive: true });
+</script>
+</body>
+</html>
